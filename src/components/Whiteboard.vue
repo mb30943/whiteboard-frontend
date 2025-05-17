@@ -23,6 +23,8 @@ const color = ref('#000000');
 const lineWidth = ref(2);
 let ctx;
 let socket;
+const lastX = ref(0);
+const lastY = ref(0);
 
 const route = useRoute();
 const boardId = route.params.id;
@@ -49,29 +51,56 @@ const emitDrawing = (payload) => {
 
 const startDrawing = (e) => {
   drawing.value = true;
-  ctx.beginPath();
-  ctx.moveTo(e.offsetX, e.offsetY);
+  lastX.value = e.offsetX;
+  lastY.value = e.offsetY;
 };
+
 
 const draw = (e) => {
   if (!drawing.value) return;
-  ctx.lineTo(e.offsetX, e.offsetY);
+
+  const newX = e.offsetX;
+  const newY = e.offsetY;
+
+  // Draw segment on local canvas
+  ctx.beginPath();
+  ctx.moveTo(lastX.value, lastY.value);
+  ctx.lineTo(newX, newY);
   ctx.strokeStyle = color.value;
   ctx.lineWidth = lineWidth.value;
   ctx.stroke();
-  emitDrawing({ x: e.offsetX, y: e.offsetY, color: color.value, lineWidth: lineWidth.value });
+  ctx.closePath();
+
+  // Emit segment data to server
+  emitDrawing({
+    startX: lastX.value,
+    startY: lastY.value,
+    endX: newX,
+    endY: newY,
+    color: color.value,
+    lineWidth: lineWidth.value
+  });
+
+  // Update last point
+  lastX.value = newX;
+  lastY.value = newY;
 };
+
 
 const stopDrawing = () => {
   drawing.value = false;
 };
 
-const drawFromServer = ({ x, y, color, lineWidth }) => {
-  ctx.lineTo(x, y);
+const drawFromServer = ({ startX, startY, endX, endY, color, lineWidth }) => {
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(endX, endY);
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth;
   ctx.stroke();
+  ctx.closePath();
 };
+
   
   onMounted(() => {
     ctx = canvas.value.getContext('2d');
