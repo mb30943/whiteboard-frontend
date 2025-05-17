@@ -14,13 +14,16 @@
   
   <script setup>
   import { ref, onMounted } from 'vue';
-  
+  import { useRoute } from 'vue-router';
+
   const canvas = ref(null);
   const drawing = ref(false);
   const color = ref('#000000');
   const lineWidth = ref(2);
   let ctx;
-  
+  const route = useRoute();
+const boardId = route.params.id;
+console.log('Board ID:', boardId);
   const socket = new WebSocket("ws://localhost:8080/ws");
   
   // Handle incoming drawing data

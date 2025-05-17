@@ -4,7 +4,7 @@ import WhiteboardView from '../components/Whiteboard.vue'; // Create this later
 
 const routes = [
   { path: '/', name: 'Login', component: LoginView },
-  { path: '/WhiteboardView', name: 'Dashboard', component: WhiteboardView }
+  { path: '/whiteBoards/:id', name: 'Dashboard', component: WhiteboardView , props: true }
 ];
 
 const router = createRouter({
