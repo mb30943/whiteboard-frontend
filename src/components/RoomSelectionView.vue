@@ -43,13 +43,27 @@ methods: {
       this.error = err.message;
     }
   },
-  joinRoom() {
-    if (!this.joinRoomId.trim()) {
-      this.error = 'Please enter a room ID';
-      return;
-    }
-    this.$router.push(`/whiteBoards/${this.joinRoomId.trim()}`);
-  },
+joinRoom() {
+  if (!this.joinRoomId.trim()) {
+    this.error = 'Please enter a room link or ID';
+    return;
+  }
+
+  let roomId = this.joinRoomId.trim();
+
+  if (roomId.includes('whiteBoards/')) {
+    const parts = roomId.split('/');
+    roomId = parts[parts.length - 1]; 
+  }
+
+  if (!roomId) {
+    this.error = 'Invalid room link';
+    return;
+  }
+
+  this.$router.push(`/whiteBoards/${roomId}`);
+}
+
 },
 
 };
