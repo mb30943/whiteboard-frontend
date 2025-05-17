@@ -45,6 +45,7 @@ export default {
         }
 
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user_id', data.user.id);
         this.$emit('registered');
       } catch (err) {
         this.error = err.message;
