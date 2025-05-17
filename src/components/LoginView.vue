@@ -20,19 +20,25 @@
     @switchToLogin="isRegistering = false"
   />
 
-  <!-- WHITEBOARD VIEW AFTER LOGIN -->
-  <WhiteboardView v-else />
+  <!-- ROOM SELECTION VIEW AFTER LOGIN/REGISTER -->
+  <RoomSelectionView
+    v-else-if="showRoomSelection"
+    @enterRoom="handleEnterRoom"
+  />
+
 </template>
 
 <script>
 import WhiteboardView from './Whiteboard.vue'
 import RegisterView from './RegisterView.vue'
+import RoomSelectionView from './RoomSelectionView.vue'
 
 export default {
   name: 'LoginView',
   components: {
     WhiteboardView,
-    RegisterView
+    RegisterView,
+    RoomSelectionView
   },
   data() {
     return {
@@ -40,7 +46,9 @@ export default {
       password: '',
       error: '',
       loggedIn: false,
-      isRegistering: false
+      isRegistering: false,
+      showRoomSelection: false,
+      roomId: null 
     };
   },
   methods: {
@@ -63,9 +71,13 @@ export default {
         if (!res.ok) {
           throw new Error(data.error || 'Login failed');
         }
-
+        console.log('data',data);
+        
         localStorage.setItem('token', data.token);
+        //  localStorage.setItem('user_id', data.user.id); 
         this.loggedIn = true;
+
+          this.showRoomSelection = true;
       } catch (err) {
         this.error = err.message;
       }
@@ -73,6 +85,11 @@ export default {
     handleRegistered() {
       this.loggedIn = true;
       this.isRegistering = false;
+       this.showRoomSelection = true; 
+    },
+     handleEnterRoom(selectedRoomId) {
+      this.roomId = selectedRoomId;
+      this.showRoomSelection = false; 
     }
   }
 };
