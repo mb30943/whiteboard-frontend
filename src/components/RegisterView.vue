@@ -1,53 +1,33 @@
 <template>
-  <!-- LOGIN FORM -->
-  <div class="login-container" v-if="!loggedIn && !isRegistering">
-    <h2>Login</h2>
-    <form @submit.prevent="handleLogin">
+  <div class="login-container">
+    <h2>Register</h2>
+    <form @submit.prevent="handleRegister">
       <input v-model="email" type="email" placeholder="Email" required />
       <input v-model="password" type="password" placeholder="Password" required />
-      <button type="submit">Login</button>
+      <button type="submit">Register</button>
       <p v-if="error" class="error">{{ error }}</p>
     </form>
-    <p>Don't have an account? 
-      <button @click="isRegistering = true">Create one</button>
+    <p>Already have an account? 
+      <button @click="$emit('switchToLogin')">Login</button>
     </p>
   </div>
-
-  <!-- REGISTER FORM -->
-  <RegisterView
-    v-else-if="isRegistering"
-    @registered="handleRegistered"
-    @switchToLogin="isRegistering = false"
-  />
-
-  <!-- WHITEBOARD VIEW AFTER LOGIN -->
-  <WhiteboardView v-else />
 </template>
 
 <script>
-import WhiteboardView from './Whiteboard.vue'
-import RegisterView from './RegisterView.vue'
-
 export default {
-  name: 'LoginView',
-  components: {
-    WhiteboardView,
-    RegisterView
-  },
+  name: 'RegisterView',
   data() {
     return {
       email: '',
       password: '',
-      error: '',
-      loggedIn: false,
-      isRegistering: false
+      error: ''
     };
   },
   methods: {
-    async handleLogin() {
+    async handleRegister() {
       this.error = '';
       try {
-        const res = await fetch('http://localhost:3000/api/login', {
+        const res = await fetch('http://localhost:3000/api/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -61,18 +41,14 @@ export default {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || 'Login failed');
+          throw new Error(data.error || 'Registration failed');
         }
 
         localStorage.setItem('token', data.token);
-        this.loggedIn = true;
+        this.$emit('registered');
       } catch (err) {
         this.error = err.message;
       }
-    },
-    handleRegistered() {
-      this.loggedIn = true;
-      this.isRegistering = false;
     }
   }
 };
