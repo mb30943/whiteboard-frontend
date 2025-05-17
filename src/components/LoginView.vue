@@ -74,7 +74,7 @@ export default {
         console.log('data',data);
         
         localStorage.setItem('token', data.token);
-        //  localStorage.setItem('user_id', data.user.id); 
+        localStorage.setItem('user_id', data.user.id); 
         this.loggedIn = true;
 
           this.showRoomSelection = true;
