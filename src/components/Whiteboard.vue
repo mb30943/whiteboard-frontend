@@ -67,7 +67,7 @@ onMounted(() => {
   ctx = canvas.value.getContext('2d');
 
 
-  socket = io('http://localhost:3000');
+  socket = io('http://192.168.0.104:3000');
 
 
   socket.emit('join-room', boardId);
