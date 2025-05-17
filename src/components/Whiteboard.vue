@@ -1,6 +1,9 @@
 <template>
   <div>
     <!-- Existing Canvas and Tools -->
+     <button @click="undo">Undo</button>
+<button @click="redo">Redo</button>
+
     <canvas ref="canvas" width="800" height="600"
       @mousedown="startDrawing"
       @mouseup="stopDrawing"
@@ -50,6 +53,11 @@ const lastY = ref(0);
 const route = useRoute();
 const boardId = route.params.id;
 
+const drawingHistory = ref([]); 
+const redoStack = ref([]);
+let currentStroke = []; 
+
+
 
 // ✅ Share Modal Logic - NEW ADDITION
 const showModal = ref(false);
@@ -88,46 +96,44 @@ const emitDrawing = (payload) => {
   socket.emit('draw', { roomId: boardId, data: payload });
 };
 
-
 const startDrawing = (e) => {
   drawing.value = true;
   lastX.value = e.offsetX;
   lastY.value = e.offsetY;
+  currentStroke = [];
 };
 
 
+const drawSegment = ({ startX, startY, endX, endY, color, lineWidth }) => {
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(endX, endY);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+  ctx.closePath();
+};
 
 
 const draw = (e) => {
   if (!drawing.value) return;
 
-
   const newX = e.offsetX;
   const newY = e.offsetY;
 
-
-  // Draw segment on local canvas
-  ctx.beginPath();
-  ctx.moveTo(lastX.value, lastY.value);
-  ctx.lineTo(newX, newY);
-  ctx.strokeStyle = color.value;
-  ctx.lineWidth = lineWidth.value;
-  ctx.stroke();
-  ctx.closePath();
-
-
-  // Emit segment data to server
-  emitDrawing({
+  const segment = {
     startX: lastX.value,
     startY: lastY.value,
     endX: newX,
     endY: newY,
     color: color.value,
     lineWidth: lineWidth.value
-  });
+  };
 
+  drawSegment(segment);
+  emitDrawing(segment);
+  currentStroke.push(segment); 
 
-  // Update last point
   lastX.value = newX;
   lastY.value = newY;
 };
@@ -135,7 +141,12 @@ const draw = (e) => {
 
 
 
+
 const stopDrawing = () => {
+  if (currentStroke.length > 0) {
+    drawingHistory.value.push(currentStroke); 
+    redoStack.value = []; 
+  }
   drawing.value = false;
 };
 
@@ -151,6 +162,30 @@ const drawFromServer = ({ startX, startY, endX, endY, color, lineWidth }) => {
 };
 
 
+const undo = () => {
+  if (drawingHistory.value.length === 0) return;
+
+  const lastStroke = drawingHistory.value.pop();
+  redoStack.value.push(lastStroke);
+  redrawAll();
+};
+
+const redo = () => {
+  if (redoStack.value.length === 0) return;
+
+  const stroke = redoStack.value.pop();
+  drawingHistory.value.push(stroke);
+  stroke.forEach(segment => drawSegment(segment));
+};
+
+
+const redrawAll = () => {
+  ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
+  drawingHistory.value.forEach(stroke => {
+    stroke.forEach(segment => drawSegment(segment));
+  });
+};
+
 
 
 onMounted(() => {
@@ -165,8 +200,6 @@ canvas {
   border: 1px solid #ccc;
 }
 
-
-/* ✅ Share Button and Modal Styles - NEW ADDITION */
 .share-button {
   margin-top: 10px;
   padding: 6px 12px;
