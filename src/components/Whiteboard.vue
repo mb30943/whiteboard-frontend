@@ -206,7 +206,7 @@ const draw = (e) => {
 
 const stopDrawing = () => {
   if (currentStroke.length > 0) {
-    drawingHistory.value.push(...currentStroke); 
+    drawingHistory.value.push(currentStroke); 
     redoStack.value = [];
   }
   drawing.value = false;
@@ -228,7 +228,7 @@ const drawFromServer = ({ startX, startY, endX, endY, color, lineWidth }) => {
 const undo = () => {
   if (drawingHistory.value.length === 0) return;
 
-  const lastStroke = drawingHistory.value.pop();
+  const lastStroke = drawingHistory.value.pop(); 
   redoStack.value.push(lastStroke);
   redrawAll();
 };
@@ -243,8 +243,9 @@ const redo = () => {
 
 const redrawAll = () => {
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
-  drawingHistory.value.forEach(segment => {
-    drawSegment(segment);
+
+  drawingHistory.value.forEach(stroke => {
+      drawSegment(stroke);
   });
 };
 
