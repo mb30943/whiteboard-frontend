@@ -30,6 +30,11 @@
         <button @click="showModal = false">Close</button>
       </div>
     </div>
+    <!-- Save Button -->
+<button @click="saveBoard" class="save-button">
+  Save Board
+</button>
+
   </div>
 </template>
 
@@ -38,6 +43,8 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import { io } from 'socket.io-client';
+import { db } from "@/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 
 const canvas = ref(null);
@@ -103,6 +110,41 @@ const startDrawing = (e) => {
   currentStroke = [];
 };
 
+const saveBoard = async () => {
+  try {
+    const docRef = doc(db, "boards", boardId);
+    await setDoc(docRef, {
+      data: drawingHistory.value,
+      updatedAt: new Date()
+    });
+    console.log("Board saved!");
+  } catch (error) {
+    console.error("Error saving board:", error);
+  }
+};
+
+const loadBoard = async () => {
+  try {
+    const docRef = doc(db, "boards", boardId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const savedData = docSnap.data().data;
+      drawingHistory.value = savedData || [];
+      redrawAll();
+    } else {
+      console.log("No such board!");
+    }
+  } catch (error) {
+    console.error("Error loading board:", error);
+  }
+};
+onMounted(async () => {
+  ctx = canvas.value.getContext('2d');
+  socket = io('http://192.168.0.104:3000');
+  socket.emit('join-room', boardId);
+  socket.on('draw', (data) => drawFromServer(data));
+  await loadBoard(); 
+});
 
 const drawSegment = ({ startX, startY, endX, endY, color, lineWidth }) => {
   ctx.beginPath();
@@ -144,11 +186,12 @@ const draw = (e) => {
 
 const stopDrawing = () => {
   if (currentStroke.length > 0) {
-    drawingHistory.value.push(currentStroke); 
-    redoStack.value = []; 
+    drawingHistory.value.push(...currentStroke); 
+    redoStack.value = [];
   }
   drawing.value = false;
 };
+
 
 
 const drawFromServer = ({ startX, startY, endX, endY, color, lineWidth }) => {
@@ -178,13 +221,14 @@ const redo = () => {
   stroke.forEach(segment => drawSegment(segment));
 };
 
-
 const redrawAll = () => {
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
-  drawingHistory.value.forEach(stroke => {
-    stroke.forEach(segment => drawSegment(segment));
+  drawingHistory.value.forEach(segment => {
+    drawSegment(segment);
   });
 };
+
+
 
 
 
@@ -198,6 +242,15 @@ onMounted(() => {
 <style scoped>
 canvas {
   border: 1px solid #ccc;
+}
+.save-button {
+  margin-top: 10px;
+  padding: 6px 12px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .share-button {
