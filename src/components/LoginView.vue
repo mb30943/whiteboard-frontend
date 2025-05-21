@@ -25,13 +25,14 @@
     v-else-if="showRoomSelection"
     @enterRoom="handleEnterRoom"
   />
-
 </template>
 
 <script>
-import WhiteboardView from './Whiteboard.vue'
-import RegisterView from './RegisterView.vue'
-import RoomSelectionView from './RoomSelectionView.vue'
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/firebase'; 
+import WhiteboardView from './Whiteboard.vue';
+import RegisterView from './RegisterView.vue';
+import RoomSelectionView from './RoomSelectionView.vue';
 
 export default {
   name: 'LoginView',
@@ -48,36 +49,26 @@ export default {
       loggedIn: false,
       isRegistering: false,
       showRoomSelection: false,
-      roomId: null 
+      roomId: null
     };
   },
   methods: {
     async handleLogin() {
       this.error = '';
       try {
-        const res = await fetch('http://localhost:3000/api/login', {
+        const userCredential = await signInWithEmailAndPassword(auth, this.email, this.password);
+        const user = userCredential.user;
+
+         await fetch('http://localhost:3000/api/syncUser', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: this.email,
-            password: this.password
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user.uid, email: user.email }),
         });
+        // Store Firebase UID in localStorage
+        localStorage.setItem('user_id', user.uid);
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || 'Login failed');
-        }
-        console.log('data',data);
-        
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user_id', data.user.id); 
         this.loggedIn = true;
-
-          this.showRoomSelection = true;
+        this.showRoomSelection = true;
       } catch (err) {
         this.error = err.message;
       }
@@ -85,11 +76,11 @@ export default {
     handleRegistered() {
       this.loggedIn = true;
       this.isRegistering = false;
-       this.showRoomSelection = true; 
+      this.showRoomSelection = true;
     },
-     handleEnterRoom(selectedRoomId) {
+    handleEnterRoom(selectedRoomId) {
       this.roomId = selectedRoomId;
-      this.showRoomSelection = false; 
+      this.showRoomSelection = false;
     }
   }
 };

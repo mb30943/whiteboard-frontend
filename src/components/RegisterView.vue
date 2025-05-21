@@ -14,6 +14,9 @@
 </template>
 
 <script>
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/firebase'; 
+
 export default {
   name: 'RegisterView',
   data() {
@@ -27,25 +30,17 @@ export default {
     async handleRegister() {
       this.error = '';
       try {
-        const res = await fetch('http://localhost:3000/api/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: this.email,
-            password: this.password
-          })
-        });
+        const userCredential = await createUserWithEmailAndPassword(auth, this.email, this.password);
+        const user = userCredential.user;
 
-        const data = await res.json();
+        await fetch('http://localhost:3000/api/syncUser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.uid, email: user.email }),
+          });
 
-        if (!res.ok) {
-          throw new Error(data.error || 'Registration failed');
-        }
 
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user_id', data.user.id);
+        localStorage.setItem('user_id', user.uid);
         this.$emit('registered');
       } catch (err) {
         this.error = err.message;
