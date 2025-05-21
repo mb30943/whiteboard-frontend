@@ -230,7 +230,10 @@ const undo = () => {
 
   const lastStroke = drawingHistory.value.pop(); 
   redoStack.value.push(lastStroke);
+
   redrawAll();
+
+  socket.emit('undo', { roomId: boardId });
 };
 
 const redo = () => {
@@ -238,8 +241,12 @@ const redo = () => {
 
   const stroke = redoStack.value.pop();
   drawingHistory.value.push(stroke);
+
   stroke.forEach(segment => drawSegment(segment));
+
+  socket.emit('redo', { roomId: boardId, stroke });
 };
+
 
 const redrawAll = () => {
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
@@ -255,6 +262,19 @@ const redrawAll = () => {
 
 onMounted(() => {
   ctx = canvas.value.getContext('2d');
+  socket.on('undo', () => {
+  if (drawingHistory.value.length === 0) return;
+  const lastStroke = drawingHistory.value.pop(); 
+  redoStack.value.push(lastStroke);
+  redrawAll();
+});
+
+socket.on('redo', (stroke) => {
+  if (!stroke || !Array.isArray(stroke)) return;
+  drawingHistory.value.push(stroke);
+  stroke.forEach(segment => drawSegment(segment));
+});
+
 });
 </script>
  
