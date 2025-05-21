@@ -41,13 +41,21 @@ export default {
       drawings: []
     };
   },
-   async mounted() {
+  async mounted() {
     try {
+      const userId = localStorage.getItem('user_id');
       const snapshot = await getDocs(collection(db, 'boards'));
-      this.drawings = snapshot.docs.map(doc => ({
-        id: doc.id,
-        name: `Board ${doc.id.substring(0, 5)}`
-      }));
+
+      this.drawings = snapshot.docs
+        .filter(doc => {
+          const data = doc.data();
+          const participants = data.participants || [];
+          return participants.includes(userId);
+        })
+        .map(doc => ({
+          id: doc.id,
+          name: `Board ${doc.id.substring(0, 5)}`
+        }));
     } catch (err) {
       this.error = 'Failed to load boards: ' + err.message;
     }

@@ -112,16 +112,36 @@ const startDrawing = (e) => {
 
 const saveBoard = async () => {
   try {
+    const userId = localStorage.getItem('user_id');
     const docRef = doc(db, "boards", boardId);
+    const boardSnap = await getDoc(docRef);
+
+    let updatedParticipants = [userId];
+
+    if (boardSnap.exists()) {
+      const boardData = boardSnap.data();
+      const existing = boardData.participants || [];
+
+      if (!existing.includes(userId)) {
+        updatedParticipants = [...existing, userId];
+      } else {
+        updatedParticipants = existing;
+      }
+    }
+
+
     await setDoc(docRef, {
-      data: drawingHistory.value,
-      updatedAt: new Date()
-    });
-    console.log("Board saved!");
+       data: drawingHistory.value,
+      updatedAt: new Date(),
+      participants: updatedParticipants
+    }, { merge: true });
+
+    console.log("Participants updated!");
   } catch (error) {
-    console.error("Error saving board:", error);
+    console.error("Error updating participants:", error);
   }
 };
+
 
 const loadBoard = async () => {
   try {
