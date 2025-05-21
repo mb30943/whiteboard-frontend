@@ -131,7 +131,7 @@ const saveBoard = async () => {
 
 
     await setDoc(docRef, {
-       data: drawingHistory.value,
+       data:  drawingHistory.value.flat(),
       updatedAt: new Date(),
       participants: updatedParticipants
     }, { merge: true });
