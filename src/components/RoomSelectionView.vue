@@ -17,13 +17,17 @@
     <!-- Main content area -->
     <div class="drawings-list">
       <h3>Previously Saved Drawings</h3>
-      <ul>
-        <li v-for="drawing in drawings" :key="drawing.id">
-            <router-link :to="`/whiteBoards/${drawing.id}`">
-              {{ drawing.name }}
-            </router-link>
-        </li>
-      </ul>
+      <div class="drawings-grid">
+        <div
+          class="drawing-card"
+          v-for="drawing in drawings"
+          :key="drawing.id"
+        >
+          <router-link :to="`/whiteBoards/${drawing.id}`" class="card-link">
+            {{ drawing.name }}
+          </router-link>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -45,6 +49,7 @@ export default {
     try {
       const userId = localStorage.getItem('user_id');
       const snapshot = await getDocs(collection(db, 'boards'));
+console.log('this.drawings',snapshot.docs);
 
       this.drawings = snapshot.docs
         .filter(doc => {
@@ -149,16 +154,38 @@ export default {
   overflow-y: auto;
 }
 
-.drawing-item {
-  margin-bottom: 0.5rem;
+.drawings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0;
 }
 
-.drawing-item a {
+.drawing-card {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.drawing-card:hover {
+  transform: scale(1.03);
+}
+
+.card-link {
   text-decoration: none;
   color: #007bff;
+  font-weight: bold;
+  font-size: 1rem;
 }
 
-.drawing-item a:hover {
+.card-link:hover {
   text-decoration: underline;
 }
 </style>
