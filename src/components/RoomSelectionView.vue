@@ -18,8 +18,10 @@
     <div class="drawings-list">
       <h3>Previously Saved Drawings</h3>
       <ul>
-        <li v-for="drawing in drawings" :key="drawing.id" class="drawing-item">
-          <router-link :to="`/whiteBoards/${drawing.id}`">{{ drawing.name }}</router-link>
+        <li v-for="drawing in drawings" :key="drawing.id">
+            <router-link :to="`/whiteBoards/${drawing.id}`">
+              {{ drawing.name }}
+            </router-link>
         </li>
       </ul>
     </div>
@@ -27,6 +29,9 @@
 </template>
 
 <script>
+import { db } from "@/firebase";
+import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
+
 export default {
   data() {
     return {
@@ -36,10 +41,16 @@ export default {
       drawings: []
     };
   },
-  mounted() {
-    // Load saved drawings from localStorage
-    const savedDrawings = JSON.parse(localStorage.getItem('saved_drawings')) || [];
-    this.drawings = savedDrawings;
+   async mounted() {
+    try {
+      const snapshot = await getDocs(collection(db, 'boards'));
+      this.drawings = snapshot.docs.map(doc => ({
+        id: doc.id,
+        name: `Board ${doc.id.substring(0, 5)}`
+      }));
+    } catch (err) {
+      this.error = 'Failed to load boards: ' + err.message;
+    }
   },
   methods: {
     async createRoom() {
