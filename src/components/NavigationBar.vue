@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar" >
+  <nav class="navbar" v-if="userId">
     <div class="navbar-left">
       <router-link to="/" class="logo">Whiteboard App</router-link>
     </div>
@@ -11,33 +11,52 @@
 </template>
 
 <script setup>
-import { ref, onMounted,computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { auth } from '../firebase'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { signOut } from 'firebase/auth'
 
 const router = useRouter()
-const route = useRoute()  // <-- here
+const userId = ref(localStorage.getItem('user_id'))
 
-const shouldShowNavbar = computed(() => {
-    console.log('ddsdd',route.name);
-  return route.name
+let checkInterval = null
+
+onMounted(() => {
+  checkInterval = setInterval(() => {
+    const storedId = localStorage.getItem('user_id')
+    if (userId.value !== storedId) {
+      userId.value = storedId
+    }
+  }, 500)
 })
 
+onUnmounted(() => {
+  clearInterval(checkInterval)
+})
+
+watch(userId, (newVal) => {
+  if (!newVal) {
+    console.log('User ID is null, redirecting to login...')
+    router.push('/')
+      window.location.reload()
+  }
+})
 
 function logout() {
-  signOut(auth).then(() => {
-    router.push('/')
-  }).catch((error) => {
-    console.error('Logout error:', error)
-  })
+  signOut(auth)
+    .then(() => {
+      localStorage.removeItem('user_id')
+      userId.value = null
+    })
+    .catch((error) => {
+      console.error('Logout error:', error)
+    })
 }
 
 function goToDashboard() {
-  // If you want to store a boardId or similar, get it here.
-  // For demo, just navigate to a fixed route:
   router.push('/dashboard')
 }
+
 </script>
 
 <style scoped>
@@ -56,7 +75,7 @@ function goToDashboard() {
 }
 
 .dashboard-button {
-  background-color: #3498db; /* blue */
+  background-color: #3498db;
   border: none;
   color: white;
   padding: 0.5rem 1rem;
