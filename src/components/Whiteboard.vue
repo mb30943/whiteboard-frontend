@@ -91,10 +91,7 @@ onMounted(() => {
   socket.on('draw', (data) => {
     drawFromServer(data);
   });
-socket.on('room-users', (users) => {
-  console.log('Users in the room:', users);
-  // Update UI accordingly
-});
+
   
 });
 
