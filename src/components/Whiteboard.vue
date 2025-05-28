@@ -4,15 +4,6 @@
      <button @click="undo">Undo</button>
 <button @click="redo">Redo</button>
 
-<div class="user-list">
-  <h4>Users in this room:</h4>
-  <ul>
-    <li v-for="user in usersInRoom" :key="user.socketId">
-      {{ user.username }}
-    </li>
-  </ul>
-</div>
-
     <canvas ref="canvas" width="800" height="600"
       @mousedown="startDrawing"
       @mouseup="stopDrawing"
@@ -55,7 +46,7 @@ import { io } from 'socket.io-client';
 import { db } from "@/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
-const usersInRoom = ref([]);
+
 const canvas = ref(null);
 const drawing = ref(false);
 const color = ref('#000000');
@@ -101,9 +92,7 @@ onMounted(() => {
     drawFromServer(data);
   });
 
-  socket.on('update-users', (users) => {
-  usersInRoom.value = users; 
-});
+  
 });
 
 
@@ -345,28 +334,6 @@ canvas {
   padding: 8px;
   margin-bottom: 12px;
 }
-.user-list {
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  max-width: 200px;
-  background: #f9f9f9;
-  border-radius: 6px;
-  font-family: sans-serif;
-}
 
-.user-list h4 {
-  margin: 0 0 8px 0;
-}
-
-.user-list ul {
-  padding-left: 16px;
-  margin: 0;
-}
-
-.user-list li {
-  list-style-type: disc;
-  margin-bottom: 4px;
-}
 
 </style>
