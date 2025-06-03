@@ -67,61 +67,63 @@ export default {
   methods: {
     
     async createRoom() {
-      this.error = '';
-      try {
-        const userId = localStorage.getItem('user_id');
-        const res = await fetch('http://localhost:3000/api/boards', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: this.newRoomName,
-            user_id: userId
-          })
-        });
+        this.error = '';
+        try {
+          const userId = localStorage.getItem('user_id');
+          const res = await fetch('http://localhost:3000/api/boards', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: this.newRoomName,
+              user_id: userId
+            })
+          });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to create room');
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to create room');
 
-        this.$router.push({ path: `/whiteBoards/${data.id}` });
-      } catch (err) {
-        this.error = err.message;
-      }
+          this.$router.push({ path: `/whiteBoards/${data.id}` });
+        } catch (err) {
+          this.error = err.message;
+        }
     },
-      handleDrawingClick(boardId) {
-    let username = localStorage.getItem('username');
 
-    if (!username) {
-      username = prompt('Enter your username to join the board:');
-      if (!username) {
-        alert('Username is required to join the room');
-        return;
-      }
-      localStorage.setItem('username', username);
-    }
+    handleDrawingClick(boardId) {
+        let username = localStorage.getItem('username');
 
-    this.$router.push(`/whiteBoards/${boardId}`);
+        if (!username) {
+          username = prompt('Enter your username to join the board:');
+          if (!username) {
+            alert('Username is required to join the room');
+            return;
+          }
+          localStorage.setItem('username', username);
+        }
+
+        this.$router.push(`/whiteBoards/${boardId}`);
   },
+
     joinRoom() {
-      this.error = '';
-      if (!this.joinRoomId.trim()) {
-        this.error = 'Please enter a room link or ID';
-        return;
-      }
+        this.error = '';
+        if (!this.joinRoomId.trim()) {
+          this.error = 'Please enter a room link or ID';
+          return;
+        }
 
-      let roomId = this.joinRoomId.trim();
-      if (roomId.includes('whiteBoards/')) {
-        const parts = roomId.split('/');
-        roomId = parts[parts.length - 1];
-      }
+        let roomId = this.joinRoomId.trim();
+        if (roomId.includes('whiteBoards/')) {
+          const parts = roomId.split('/');
+          roomId = parts[parts.length - 1];
+        }
 
-      if (!roomId) {
-        this.error = 'Invalid room link';
-        return;
-      }
+        if (!roomId) {
+          this.error = 'Invalid room link';
+          return;
+        }
 
-      this.$router.push(`/whiteBoards/${roomId}`);
+        this.$router.push(`/whiteBoards/${roomId}`);
     }
   }
 };
