@@ -39,6 +39,7 @@ watch(userId, (newVal) => {
     console.log('User ID is null, redirecting to login...')
     router.push('/')
       window.location.reload()
+      localStorage.removeItem('username')
   }
 })
 
