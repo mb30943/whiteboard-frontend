@@ -24,7 +24,7 @@
           :key="drawing.id"
            @click="handleDrawingClick(drawing.id)"
         >
-          {{ drawing.name }}
+          {{ drawing.boardName }}
         </div>
       </div>
     </div>
@@ -33,7 +33,7 @@
 
 <script>
 import { db } from "@/firebase";
-import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc,addDoc ,serverTimestamp } from "firebase/firestore";
 
 export default {
   data() {
@@ -56,10 +56,14 @@ export default {
           const participants = data.participants || [];
           return participants.includes(userId);
         })
-        .map(doc => ({
+         .map(doc => {
+        const data = doc.data();
+        return {
           id: doc.id,
-          name: `Board ${doc.id.substring(0, 5)}`
-        }));
+          name: `Board ${doc.id.substring(0, 5)}`,
+          boardName: data.name || 'Untitled Board', 
+    };
+  });
     } catch (err) {
       this.error = 'Failed to load boards: ' + err.message;
     }
@@ -70,21 +74,13 @@ export default {
         this.error = '';
         try {
           const userId = localStorage.getItem('user_id');
-          const res = await fetch('http://localhost:3000/api/boards', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              name: this.newRoomName,
-              user_id: userId
-            })
+         const docRef = await addDoc(collection(db, 'boards'), {
+            name: this.newRoomName,
+            id: userId,
+            created_at: serverTimestamp(),
+            participants: [userId],
           });
-
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Failed to create room');
-
-          this.$router.push({ path: `/whiteBoards/${data.id}` });
+          this.$router.push({ path: `/whiteBoards/${docRef.id}` });
         } catch (err) {
           this.error = err.message;
         }
