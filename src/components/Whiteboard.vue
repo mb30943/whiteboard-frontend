@@ -3,7 +3,12 @@
     <!-- Existing Canvas and Tools -->
      <button @click="undo">Undo</button>
 <button @click="redo">Redo</button>
-
+<div class="online-users">
+  <h4>Users in this board:</h4>
+  <ul>
+    <li v-for="user in users" :key="user">{{ user }}</li>
+  </ul>
+</div>
     <canvas ref="canvas" width="800" height="600"
       @mousedown="startDrawing"
       @mouseup="stopDrawing"
@@ -47,6 +52,7 @@ import { db } from "@/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 
+
 const canvas = ref(null);
 const drawing = ref(false);
 const color = ref('#000000');
@@ -55,8 +61,7 @@ let ctx;
 let socket;
 const lastX = ref(0);
 const lastY = ref(0);
-
-
+const users = ref([]);
 const route = useRoute();
 const boardId = route.params.id;
 
@@ -161,9 +166,14 @@ const loadBoard = async () => {
   }
 };
 onMounted(async () => {
+  const username = localStorage.getItem('username') || prompt("Enter your name:");
   ctx = canvas.value.getContext('2d');
   socket = io('http://192.168.0.104:3000');
-  socket.emit('join-room', boardId);
+  socket.emit('join-room', { roomId: boardId, username });
+   socket.on('user-list', (userList) => {
+        users.value = userList;
+      });
+
   socket.on('draw', (data) => drawFromServer(data));
   await loadBoard(); 
 });
@@ -333,6 +343,15 @@ canvas {
   width: 100%;
   padding: 8px;
   margin-bottom: 12px;
+}
+.online-users {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 

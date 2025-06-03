@@ -22,10 +22,9 @@
           class="drawing-card"
           v-for="drawing in drawings"
           :key="drawing.id"
+           @click="handleDrawingClick(drawing.id)"
         >
-          <router-link :to="`/whiteBoards/${drawing.id}`" class="card-link">
-            {{ drawing.name }}
-          </router-link>
+          {{ drawing.name }}
         </div>
       </div>
     </div>
@@ -49,7 +48,7 @@ export default {
     try {
       const userId = localStorage.getItem('user_id');
       const snapshot = await getDocs(collection(db, 'boards'));
-console.log('this.drawings',snapshot.docs);
+      console.log('this.drawings',snapshot.docs);
 
       this.drawings = snapshot.docs
         .filter(doc => {
@@ -66,6 +65,7 @@ console.log('this.drawings',snapshot.docs);
     }
   },
   methods: {
+    
     async createRoom() {
       this.error = '';
       try {
@@ -89,6 +89,20 @@ console.log('this.drawings',snapshot.docs);
         this.error = err.message;
       }
     },
+      handleDrawingClick(boardId) {
+    let username = localStorage.getItem('username');
+
+    if (!username) {
+      username = prompt('Enter your username to join the board:');
+      if (!username) {
+        alert('Username is required to join the room');
+        return;
+      }
+      localStorage.setItem('username', username);
+    }
+
+    this.$router.push(`/whiteBoards/${boardId}`);
+  },
     joinRoom() {
       this.error = '';
       if (!this.joinRoomId.trim()) {
